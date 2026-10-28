@@ -5,8 +5,12 @@
   var PAGES = [
     { id: "index", href: "index.html", nome: "Visão geral" },
     { id: "A", href: "divida.html", nome: "Dívida" },
+    { id: "J", href: "divida-decomposicao.html", nome: "Dívida a fundo" },
+    { id: "K", href: "juros.html", nome: "Juros" },
     { id: "B", href: "mercado.html", nome: "Mercado" },
+    { id: "I", href: "mercado-eleicoes.html", nome: "Mercado e eleições" },
     { id: "C", href: "economia.html", nome: "Economia real" },
+    { id: "L", href: "estrutural.html", nome: "Estrutural" },
     { id: "D", href: "costumes.html", nome: "Costumes" },
     { id: "E", href: "regime.html", nome: "Regime" },
     { id: "F", href: "eleicao-2026.html", nome: "Eleição 2026" },
@@ -22,6 +26,9 @@
   };
   var ORDEM_V = ["nao_ocorreu", "ocorreu_parcialmente", "ocorreu", "em_aberto"];
   var GOVERNOS = [
+    { de: 1995, ate: 2003, cls: "band-t", nome: "FHC" },
+    { de: 2003, ate: 2011, cls: "band-l2", nome: "Lula 1–2" },
+    { de: 2011, ate: 2016.37, cls: "band-t2", nome: "Dilma" },
     { de: 2016.37, ate: 2019, cls: "band-t", nome: "Temer" },
     { de: 2019, ate: 2023, cls: "band-b", nome: "Bolsonaro" },
     { de: 2023, ate: 2027, cls: "band-l", nome: "Lula 3" }
@@ -271,6 +278,83 @@
     return sec;
   }
 
+  /* campos extras de uma frente: lista de objetos vira cards rótulo/valor; lista de textos vira lista */
+  var CONHECIDOS = ["frente", "titulo", "resumo", "alegacoes", "series", "comparativo_bolsonaro", "contraponto", "fontes", "analise", "relatos", "data_consulta"];
+  var TITULOS_EXTRA = {
+    tabela_eleicoes: "Eleições e mercado, 2002–2026",
+    tabela_mandatos: "Mercado por mandato",
+    hipoteses_26_10: "Hipóteses para a queda de 26/10/2026",
+    referencias_academicas: "Referências acadêmicas",
+    referencias_bibliograficas: "Referências bibliográficas",
+    decomposicao_periodos: "Decomposição da dívida por período",
+    comparacao_internacional: "Comparação internacional",
+    primario_estabilizador: "Primário que estabiliza a dívida",
+    notas_metodologicas: "Notas metodológicas",
+    metodo: "Notas de método",
+    decomposicao_crescimento: "Decomposição do crescimento por governo",
+    capital_por_periodo: "Capital por período",
+    periodizacao: "Periodização dos governos"
+  };
+  function rotulo(k) {
+    var r = { d1: "dia seguinte", d30: "30 dias", m6: "6 meses", m12: "12 meses", ibov: "Ibovespa", ptax: "PTAX",
+      sp500: "S&P 500", em_dolar: "em dólar", real_ipca: "real (IPCA)", ipca_acum: "IPCA acumulado", a_favor: "a favor", contra: "contra" };
+    return r[k] || k.replace(/_pct_pib/g, " (% PIB)").replace(/_/g, " ");
+  }
+  function valor(v) {
+    if (typeof v === "number") return fmt(v);
+    if (Array.isArray(v) && v.every(function (x) { return typeof x !== "object"; })) return v.join("; ");
+    return typeof v === "object" ? JSON.stringify(v) : String(v);
+  }
+  function kvRow(k, v) {
+    var txt = valor(v);
+    return el("div", { cls: "kvr" }, [el("span", { cls: "kk", text: rotulo(k) }), safeUrl(txt) ? link(txt) : el("span", { text: txt })]);
+  }
+  function cardsDeObjetos(arr) {
+    var g = el("div", { cls: "grid c2" });
+    arr.forEach(function (o) {
+      var ks = Object.keys(o).filter(function (x) { return x !== "id"; });
+      var card = el("article", { cls: "card kv" }, [el("h3", { text: valor(o[ks[0]]) })]);
+      ks.slice(1).forEach(function (x) { if (o[x] !== null && o[x] !== "") card.appendChild(kvRow(x, o[x])); });
+      g.appendChild(card);
+    });
+    return g;
+  }
+  function ehListaDeObjetos(v) { return Array.isArray(v) && v.length && typeof v[0] === "object" && v[0] !== null; }
+  function extras(f) {
+    var out = [];
+    Object.keys(f).forEach(function (k) {
+      var v = f[k];
+      if (CONHECIDOS.indexOf(k) >= 0 || v === null || v === "" || (Array.isArray(v) && !v.length)) return;
+      var sec = el("section", {}, [el("h2", { text: TITULOS_EXTRA[k] || rotulo(k).replace(/^./, function (c) { return c.toUpperCase(); }) })]);
+      if (typeof v === "string") {
+        var c = el("div", { cls: "card" });
+        v.split(/\n\s*\n/).forEach(function (p) { c.appendChild(el("p", { text: p.trim() })); });
+        sec.appendChild(c);
+      } else if (ehListaDeObjetos(v)) {
+        sec.appendChild(cardsDeObjetos(v));
+      } else if (Array.isArray(v)) {
+        var ul = el("ul", { cls: "fontes" });
+        v.forEach(function (t) { ul.appendChild(el("li", {}, [safeUrl(t) ? link(t, t) : String(t)])); });
+        sec.appendChild(ul);
+      } else if (typeof v === "object") {
+        var resumo = el("div", { cls: "card kv" });
+        var temResumo = false;
+        Object.keys(v).forEach(function (x) {
+          if (ehListaDeObjetos(v[x])) return;
+          resumo.appendChild(kvRow(x, v[x])); temResumo = true;
+        });
+        if (temResumo) sec.appendChild(resumo);
+        Object.keys(v).forEach(function (x) {
+          if (!ehListaDeObjetos(v[x])) return;
+          sec.appendChild(el("h3", { cls: "sub3", text: rotulo(x).replace(/^./, function (c) { return c.toUpperCase(); }) }));
+          sec.appendChild(cardsDeObjetos(v[x]));
+        });
+      } else return;
+      out.push(sec);
+    });
+    return out;
+  }
+
   function fontes(list) {
     var ul = el("ul", { cls: "fontes" });
     list.forEach(function (u) { ul.appendChild(el("li", {}, [link(u, u)])); });
@@ -321,10 +405,21 @@
       main.appendChild(el("p", { cls: "meta", text: D.video.titulo + " · " + D.video.canal }));
     }
     if ((f.alegacoes || []).length) main.appendChild(kpisFrente(f));
+    if ((f.analise || []).length) {
+      main.appendChild(el("h2", { text: "Análise" }));
+      var an = el("div", { cls: "analise" });
+      f.analise.forEach(function (b) {
+        var art = el("article", { cls: "card" }, [el("h3", { text: b.titulo || "" })]);
+        String(b.texto || "").split(/\n\s*\n/).forEach(function (p) { if (p.trim()) art.appendChild(el("p", { text: p.trim() })); });
+        an.appendChild(art);
+      });
+      main.appendChild(an);
+    }
     if ((f.series || []).length) {
       main.appendChild(el("h2", { text: "Séries" }));
       main.appendChild(el("div", { cls: "legend-bands" }, [
-        el("span", { cls: "t", text: "Temer" }), el("span", { cls: "b", text: "Bolsonaro" }), el("span", { cls: "l", text: "Lula 3" })
+        el("span", { cls: "l", text: "Lula (todos os mandatos)" }), el("span", { cls: "b", text: "Bolsonaro" }),
+        el("span", { cls: "t", text: "outros governos (rótulo na faixa)" })
       ]));
       var g = el("div", { cls: "grid c2" });
       f.series.forEach(function (s) { g.appendChild(lineChart(s)); });
@@ -343,10 +438,11 @@
       });
       rs.appendChild(rg); main.appendChild(rs);
     }
+    extras(f).forEach(function (n) { main.appendChild(n); });
     main.appendChild(alegacoes(f.alegacoes || []));
     if ((f.comparativo_bolsonaro || []).length) main.appendChild(comparativo(f.comparativo_bolsonaro));
     if (f.contraponto) {
-      main.appendChild(el("h2", { text: "Onde o alarme tinha fundamento" }));
+      main.appendChild(el("h2", { text: "IJKL".indexOf(id) >= 0 ? "Contraponto e ressalvas" : "Onde o alarme tinha fundamento" }));
       main.appendChild(el("div", { cls: "card contra" }, [el("p", { text: f.contraponto })]));
     }
     if ((f.fontes || []).length) main.appendChild(fontes(f.fontes));

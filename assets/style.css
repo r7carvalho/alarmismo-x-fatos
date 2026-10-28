@@ -12,6 +12,7 @@
   --band-bolso: rgba(235, 104, 52, .10);
   --band-lula: rgba(42, 120, 214, .10);
   --band-temer: rgba(120, 120, 120, .08);
+  --band-temer2: rgba(120, 120, 120, .16);
   --good: #0ca30c;
   --warning: #fab219;
   --serious: #ec835a;
@@ -34,6 +35,7 @@
     --band-bolso: rgba(217, 89, 38, .16);
     --band-lula: rgba(57, 135, 229, .16);
     --band-temer: rgba(160, 160, 160, .10);
+    --band-temer2: rgba(160, 160, 160, .20);
   }
 }
 :root[data-theme="dark"] {
@@ -50,6 +52,7 @@
   --band-bolso: rgba(217, 89, 38, .16);
   --band-lula: rgba(57, 135, 229, .16);
   --band-temer: rgba(160, 160, 160, .10);
+  --band-temer2: rgba(160, 160, 160, .20);
 }
 
 * { box-sizing: border-box; }
@@ -187,6 +190,14 @@ h3 { font-size: 16px; margin: 0 0 6px; }
   content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 2px;
   margin-right: 6px; vertical-align: -2px; border: 1px solid var(--line);
 }
+.chart .band-l2 { fill: var(--band-lula); }
+.chart .band-t2 { fill: var(--band-temer2); }
+.kv { display: grid; gap: 8px; align-content: start; }
+.kvr { display: grid; gap: 2px; font-size: 14px; border-top: 1px solid var(--line); padding-top: 6px; }
+.kk { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); }
+.sub3 { margin: 16px 0 8px; color: var(--text-2); }
+.analise { display: grid; gap: 12px; }
+.analise p { max-width: 78ch; }
 .legend-bands .t::before { background: var(--band-temer); }
 .legend-bands .b::before { background: var(--band-bolso); }
 .legend-bands .l::before { background: var(--band-lula); }
